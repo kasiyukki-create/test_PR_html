@@ -1,42 +1,72 @@
 const express = require('express');
 const app = express();
+const port = 3000;
 
-// 1. GET /api/tasks (タスク配列を返す)
+app.use(express.json());
+
+// ★★★ ここを追加 ★★★
+app.use(express.static('public'));   // publicフォルダ内のHTMLを公開
+
+// 以降はそのまま...
+
+// ====================== API エンドポイント ======================
+
+// 1. GET /api/tasks - タスク一覧
 app.get('/api/tasks', (req, res) => {
     res.json([
         { id: 1, title: "情報工学概論レポート", deadline: "2026-05-25", completed: false },
-        { id: 2, title: "Webシステム開発演習課題", deadline: "2026-05-29", completed: false }
+        { id: 2, title: "Webシステム開課題", deadline: "2026-05-29", completed: false }
     ]);
 });
 
-// 2. POST /api/tasks (作成タスク)
+// 2. POST /api/tasks - 新規タスク作成（課題で必須）
 app.post('/api/tasks', (req, res) => {
-    res.json({ id: 3, title: "新しい課題名", deadline: "2026-05-30", completed: false });
+    const { title, deadline, completed = false } = req.body;   // 分割代入
+
+    const newTask = {
+        id: Date.now(),           // 簡易ID
+        title,
+        deadline,
+        completed,
+        createdAt: new Date().toISOString()
+    };
+
+    console.log('📌 新規タスク受信:', newTask);   // ターミナルに表示
+
+    res.json({
+        message: "タスクを作成しました",
+        task: newTask
+    });
 });
 
-// 3. GET /api/events (イベント一覧)
+// 3. GET /api/events
 app.get('/api/events', (req, res) => {
     res.json([
-        { id: 1, name: "夏期インターンシップ説明会", event_date: "2026-06-10", apply_deadline: "2026-05-31" }
+        { id: 1, name: "臨地実習説明会", event_date: "2026-06-10", apply_deadline: "2026-05-31" }
     ]);
 });
 
-// 4. POST /api/events (イベント詳細)
+// 4. POST /api/events
 app.post('/api/events', (req, res) => {
-    res.json({ id: 2, name: "新規イベント名", event_date: "2026-06-15", apply_deadline: "2026-06-01" });
+    const { name, event_date, apply_deadline } = req.body;
+
+    const newEvent = {
+        id: Date.now(),
+        name,
+        event_date,
+        apply_deadline,
+        createdAt: new Date().toISOString()
+    };
+
+    console.log('🎉 新規イベント受信:', newEvent);
+
+    res.json({
+        message: "イベントを追加しました",
+        event: newEvent
+    });
 });
 
-// 5. GET /api/limit (期限ゲット)
-app.get('/api/limit', (req, res) => {
-    res.json({ urgent_tasks_count: 2, days_left_threshold: 3 });
-});
-
-// 6. POST /api/limit (期限詳細)
-app.post('/api/limit', (req, res) => {
-    res.json({ status: "success", message: "期限の通知設定を更新しました", days_left_threshold: 5 });
-});
-
-// サーバーの起動設定
-app.listen(3000, () => {
-    console.log('サーバーが起動しました！');
+// サーバー起動
+app.listen(port, () => {
+    console.log(`🚀 サーバーが起動しました → http://localhost:${port}`);
 });
