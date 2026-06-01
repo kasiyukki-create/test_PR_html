@@ -29,36 +29,47 @@
 
   <script>
     async function getMessages() {
-      const response = await fetch('/api/messages');
-      const messages = await response.json();
-      const ul = document.getElementById('messages');
-      ul.innerHTML = '';
-      messages.forEach(msg => {
-        const li = document.createElement('li');
-        li.textContent = `${msg.username}: ${msg.text}`;
-        ul.appendChild(li);
-      });
+      try {
+        const response = await fetch('/api/messages');
+        const messages = await response.json();
+        const ul = document.getElementById('messages');
+        ul.innerHTML = '';
+        messages.forEach(msg => {
+          const li = document.createElement('li');
+          li.textContent = `${msg.username}: ${msg.text}`;
+          ul.appendChild(li);
+        });
+      } catch (e) {
+        console.error('取得エラー', e);
+      }
     }
 
     async function sendMessage(username, text) {
-      await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, text })
-      });
-      getMessages();
+      try {
+        await fetch('/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, text })
+        });
+        getMessages();
+      } catch (e) {
+        console.error('送信エラー', e);
+      }
     }
 
-    document.getElementById('form').addEventListener('submit', (e) => {
+    document.getElementById('form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('username').value;
-      const text = document.getElementById('text').value;
-      sendMessage(username, text);
-      e.target.reset();
+      const username = document.getElementById('username').value.trim();
+      const text = document.getElementById('text').value.trim();
+      if (username && text) {
+        await sendMessage(username, text);
+        document.getElementById('text').value = '';
+      }
     });
 
-    setInterval(getMessages, 3000);  // 3秒ごとに自動更新
+    // 初期表示と定期更新
     getMessages();
+    setInterval(getMessages, 2000);
   </script>
 </body>
 </html>

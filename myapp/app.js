@@ -1,72 +1,60 @@
+require('dotenv').config();
 const express = require('express');
+const { Pool } = require('pg');
+
 const app = express();
-const port = 3000;
-
 app.use(express.json());
+app.use(express.static('public'));
 
-// ★★★ ここを追加 ★★★
-app.use(express.static('public'));   // publicフォルダ内のHTMLを公開
-
-// 以降はそのまま...
-
-// ====================== API エンドポイント ======================
-
-// 1. GET /api/tasks - タスク一覧
-app.get('/api/tasks', (req, res) => {
-    res.json([
-        { id: 1, title: "情報工学概論レポート", deadline: "2026-05-25", completed: false },
-        { id: 2, title: "Webシステム開課題", deadline: "2026-05-29", completed: false }
-    ]);
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
 });
 
-// 2. POST /api/tasks - 新規タスク作成（課題で必須）
-app.post('/api/tasks', (req, res) => {
-    const { title, deadline, completed = false } = req.body;   // 分割代入
+// GET メッセージ取得
+app.get('/api/messages', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM messages ORDER BY created_at ASC');
+    res.json(result.rows);
+  } catch (e) {
+    res.json([]);
+  }
+});
 
-    const newTask = {
-        id: Date.now(),           // 簡易ID
-        title,
-        deadline,
-        completed,
-        createdAt: new Date().toISOString()
-    };
+// POST メッセージ送信 ← ここが大事！
+app.post('/api/messages', async (req, res) => {
+  try {
+    const { username = '名無し', text } = req.body;   // ← これを正しく書く
 
-    console.log('📌 新規タスク受信:', newTask);   // ターミナルに表示
+    if (!text) {
+      return res.status(400).json({ error: "メッセージを入力してください" });
+    }
 
-    res.json({
-        message: "タスクを作成しました",
-        task: newTask
+    const result = await pool.query(
+      'INSERT INTO messages (username, text) VALUES ($1, $2) RETURNING *',
+      [username, text]
+    );
+    res.json(result.rows[0]);
+  } catch (e) {
+    console.error(e);
+    res.json({ 
+      id: Date.now(), 
+      username: '名無し', 
+      text: req.body?.text || 'エラーが発生しました' 
     });
+  }
 });
 
-// 3. GET /api/events
-app.get('/api/events', (req, res) => {
-    res.json([
-        { id: 1, name: "臨地実習説明会", event_date: "2026-06-10", apply_deadline: "2026-05-31" }
-    ]);
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/public/chat.html');
 });
 
-// 4. POST /api/events
-app.post('/api/events', (req, res) => {
-    const { name, event_date, apply_deadline } = req.body;
-
-    const newEvent = {
-        id: Date.now(),
-        name,
-        event_date,
-        apply_deadline,
-        createdAt: new Date().toISOString()
-    };
-
-    console.log('🎉 新規イベント受信:', newEvent);
-
-    res.json({
-        message: "イベントを追加しました",
-        event: newEvent
-    });
-});
-
-// サーバー起動
-app.listen(port, () => {
-    console.log(`🚀 サーバーが起動しました → http://localhost:${port}`);
+// 7-3の修正部分
+app.listen(process.env.PORT || 3000, () => {
+  console.log(
+    `サーバが起動しました: http://localhost:${process.env.PORT || 3000}`
+  );
 });
