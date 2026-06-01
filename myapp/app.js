@@ -52,9 +52,8 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/chat.html');
 });
 
-// 7-3の修正部分
+
 app.listen(process.env.PORT || 3000, () => {
   console.log(
-    `サーバが起動しました: http://localhost:${process.env.PORT || 3000}`
-  );
+    `サーバーが起動しました: http://localhost:${process.env.PORT || 3000}`);
 });
