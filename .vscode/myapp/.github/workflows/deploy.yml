@@ -2,20 +2,28 @@ name: Deploy to VPS
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
+    paths:
+      - 'public/chat.html'
+      - 'public/**'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: SSH でデプロイ
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
         with:
-          host: ${{ 160.251.250.138 }}
-          username: ${{ student32 }}
-          password: ${{ pVDQu0WEVM42}}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASS }}
+          port: 22
           script: |
+            echo "🚀 Deploying chat.html..."
             cd ~/chat-app
-            git pull origin main
-            npm install --production
-            pm2 restart chat
+            git pull origin main --rebase
+            echo "✅ Deploy completed at $(date)"
