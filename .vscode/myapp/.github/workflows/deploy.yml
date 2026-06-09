@@ -15,7 +15,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
           script: |
-            cd ~/test_PR_html
+            cd ~/test_PR_html/myapp
             git pull origin main
             npm install --production
             pm2 restart chat
