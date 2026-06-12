@@ -24,6 +24,6 @@ jobs:
           port: 22
           script: |
             echo "🚀 Deploying chat.html..."
-            cd ~/chat-app
+            cd ~/test_PR_html/myapp
             git pull origin main --rebase
             echo "✅ Deploy completed at $(date)"
